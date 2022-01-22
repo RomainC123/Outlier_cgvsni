@@ -1,9 +1,9 @@
 SEED = 0
 
 # Dataset params
-NB_IMGS_TRAIN = 100
-NB_IMGS_TEST_PERCLASS = 50
-NB_CLASSES = 5 # One for natural images, and then 4 different sources of CG images
+NB_IMGS_TRAIN = 1000
+NB_IMGS_TEST_PERCLASS = 100
+NB_CLASSES = 2 # One for natural images, and then 4 different sources of CG images
 BATCH_SIZE = 10
 
 # NICE parameters
@@ -17,8 +17,8 @@ BETA1 = 0.9
 BETA2 = 0.999
 
 # Training params
-EPOCHS = 6
+EPOCHS = 2
 K = 2
-NU = 0.01
+NU = 0.1
 
 LOG_INTERVAL = 1

@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 
 from sklearn.model_selection import train_test_split
 
-from params.constants import NB_IMGS_TEST_PERCLASS, NB_CLASSES, BATCH_SIZE
+from params.constants import NB_IMGS_TRAIN, NB_IMGS_TEST_PERCLASS, NB_CLASSES, BATCH_SIZE
 from params.paths import DATASET_PATH
 from params.transforms import TRANSFORMS_TRAIN
 
@@ -70,7 +70,7 @@ class TrainDataWrapper:
         for row in df_train.values:
             img_path = os.path.join(DATASET_PATH, row[0])
             with open(img_path, 'rb') as f:
-                list_img.append(torch.reshape(TRANSFORMS_TRAIN(Image.open(f).convert('RGB')), (3,-1)))
+                list_img.append(torch.reshape(TRANSFORMS_TRAIN(Image.open(f).convert('RGB')), (3, -1)))
         full_img = torch.cat(list_img, dim=1)
         means = torch.mean(full_img, dim=1)
         stds = torch.std(full_img, dim=1)
@@ -87,6 +87,7 @@ class TrainDataWrapper:
 
         return info
 
+
 class TestDataWrapper:
 
     def __init__(self, normalize):
@@ -96,8 +97,11 @@ class TestDataWrapper:
         # Importing data and grabbing samples for our training set
         df_data = pd.read_csv(os.path.join(DATASET_PATH, 'dataset.csv'))  # We only keep natural images for training
 
-        df_test, _ = train_test_split(df_data, train_size=int(NB_CLASSES * NB_IMGS_TEST_PERCLASS), stratify=df_data['Label'])
-        df_test = df_test.reset_index(drop=True)
+        df_data_classes = []
+        for class_id in range(NB_CLASSES):
+            df_data_classes.append(df_data.loc[df_data['Label'] == class_id].sample(NB_IMGS_TEST_PERCLASS))
+
+        df_test = pd.concat(df_data_classes, axis=0).reset_index(drop=True)
 
         # Creating dataset and dataloader objects
         dataset_test = ImgDataset(df_test, self.normalize)

@@ -26,6 +26,7 @@ np.random.seed(seed)  # Fixes the dataset, but not the training behavior
 
 results_path = os.path.join(RESULTS_PATH, '{date:%d-%m-%Y_%H:%M:%S}'.format(date=datetime.now()))
 
+print('Computing transforms...')
 data_train = TrainDataWrapper()
 model_wrapper = ENetWrapper()
 optim = Adam(model_wrapper.model.parameters(), lr=LR, betas=(BETA1, BETA2))
@@ -36,11 +37,11 @@ if cuda_state:
 
 ################################################################################
 
+fsvdd_loss.init_vars(model_wrapper.model, data_train.dataloader_train)
+losses = []
+
 print('Starting training...')
 model_wrapper.model.train()
-fsvdd_loss.init_vars(model_wrapper.model, data_train.dataloader_train)
-
-losses = []
 
 for epoch in range(1, EPOCHS + 1):  # First epoch id is 1, not 0
 
