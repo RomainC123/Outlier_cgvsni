@@ -69,6 +69,7 @@ with torch.no_grad():
         results = [0 if score < 0 else 1 for score in scores]
 
         # Grab the predictions and the labels into arrays
+        # Need to change it to show performances on different types of CG images
         real_labels.extend(target.data.cpu().numpy())
         pred_labels.extend(results)
 
