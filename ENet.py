@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from params.constants import HIDDEN_DIM, NUM_LAYERS
+from params.constants import INPUT_DIM, HIDDEN_DIM, NUM_LAYERS
 from NICE import NICE
 
 ################################################################################
@@ -81,6 +81,8 @@ class ENet(nn.Module):
     def __init__(self):
         super(ENet, self).__init__()
 
+        self.input_dim = INPUT_DIM
+
         self.convFilter0 = nn.Conv2d(3, 30, 5, bias=False)
         self.branch0 = nn.Sequential(HybridNetBlock(30, 64, nonlinear=None, pooling=None),
                                      HybridNetBlock(64, 64, pooling=None),
@@ -99,7 +101,7 @@ class ENet(nn.Module):
         self.block2 = NcgNetBlock(64, 48, 5, norm_layer=nn.BatchNorm2d)
         self.block3 = NcgNetBlock(48, 64, 3, norm_layer=nn.BatchNorm2d)
 
-        self.NICE = NICE(input_dim=6400, hidden_dim=HIDDEN_DIM, num_layers=NUM_LAYERS)  # Maybe need to find input_dim here
+        self.NICE = NICE(input_dim=self.input_dim, hidden_dim=HIDDEN_DIM, num_layers=NUM_LAYERS)  # Maybe need to find input_dim here
 
     def forward(self, input):
         x = self.convFilter0(input)
@@ -148,9 +150,6 @@ class ENetWrapper:
 
     def __init__(self):
         self.model = ENet()
-
-    def cuda(self):
-        self.model.cuda()
 
     def _get_nb_parameters(self):
 
