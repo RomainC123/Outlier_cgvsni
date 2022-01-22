@@ -100,7 +100,7 @@ torch.save({'epoch': epoch,
            os.path.join(results_path, f'checkpoint_{epoch}.pth'))
 
 with open(os.path.join(results_path, 'vars.pkl'), 'wb') as f:
-    pickle.dump({"normalize": TrainDataWrapper.normalize,
+    pickle.dump({"normalize": data_train.normalize,
                  "C": fsvdd_loss.C,
                  "R": fsvdd_loss.R,
                  "W": fsvdd_loss.W}, f)
