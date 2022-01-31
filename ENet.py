@@ -9,8 +9,6 @@ from params.constants import INPUT_DIM, HIDDEN_DIM, NUM_LAYERS
 from NICE import NICE
 
 ################################################################################
-#   VGG Model class                                                            #
-################################################################################
 
 
 class NcgNetBlock(nn.Module):
@@ -81,8 +79,6 @@ class ENet(nn.Module):
     def __init__(self):
         super(ENet, self).__init__()
 
-        self.input_dim = INPUT_DIM
-
         self.convFilter0 = nn.Conv2d(3, 30, 5, bias=False)
         self.branch0 = nn.Sequential(HybridNetBlock(30, 64, nonlinear=None, pooling=None),
                                      HybridNetBlock(64, 64, pooling=None),
@@ -100,10 +96,11 @@ class ENet(nn.Module):
         self.block1 = NcgNetBlock(128, 64, 7, stride=2, norm_layer=nn.BatchNorm2d)
         self.block2 = NcgNetBlock(64, 48, 5, norm_layer=nn.BatchNorm2d)
         self.block3 = NcgNetBlock(48, 64, 3, norm_layer=nn.BatchNorm2d)
+        self.fc1 = nn.Linear(64 * 10 * 10, 4096)
+        self.fc2 = nn.Linear(4096, 4096)
+        self.fc3 = nn.Linear(4096, 2)
 
-        self.NICE = NICE(input_dim=self.input_dim, hidden_dim=HIDDEN_DIM, num_layers=NUM_LAYERS)  # Maybe need to find input_dim here
-
-    def forward(self, input):
+    def forward(self, input, train):
         x = self.convFilter0(input)
         x = self.branch0(x)
 
@@ -123,9 +120,17 @@ class ENet(nn.Module):
         x = self.block3(x)
         x = F.max_pool2d(x, 3, stride=2)
         x = x.view(x.size(0), -1)
-        # Flow model starting on that feature map
-        x = self.NICE(x)
-        return x
+        x = self.fc1(x)
+        x = F.dropout(F.relu(x), 0.5, training=self.training)
+        x = self.fc2(x)
+        y = F.relu(x)  # Making the features variable accessible
+        x = F.relu(x)
+        x = F.dropout(F.relu(x), 0.5, training=self.training)
+        x = self.fc3(x)
+        if train:
+            return x
+        else:
+            return y
 
     def init_convFilter(self, trainable=False):
         srm = np.loadtxt('SRM1505.txt')
@@ -141,8 +146,6 @@ class ENet(nn.Module):
             self.convFilter1_g.weight.requires_grad = False
             self.convFilter1_b.weight.requires_grad = False
 
-################################################################################
-#   VGG Model container                                                        #
 ################################################################################
 
 

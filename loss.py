@@ -15,16 +15,15 @@ class FSVDDLoss:
         infos = f"K: {K}\n"
         infos += f"Nu: {NU}\n"
 
-    def init_vars(self, model, dataloader_train, eps=10e-3):
+    def init_vars(self, model_mapping, model_flow, dataloader_train, eps=10e-3):
 
         print('Computing C...')
 
         nb_imgs = 0
-        C = torch.zeros(model.input_dim)
+        C = torch.zeros(model_flow.input_dim)
         if self.cuda_state:
             C = C.cuda()
 
-        model.eval()
         with torch.no_grad():
             for data, _, _ in dataloader_train:
 
@@ -32,7 +31,8 @@ class FSVDDLoss:
                 if self.cuda_state:
                     data = data.cuda()
 
-                output = model.forward(data)
+                mapping = model_mapping.forward(data, False)
+                output = model_flow.forward(mapping)
                 C += torch.sum(output, dim=0)
 
         C /= nb_imgs
@@ -49,7 +49,7 @@ class FSVDDLoss:
             self.R = np.quantile(np.sqrt(dist.clone().data.cpu().numpy()), 1 - NU)
 
     def update_W(self, model):
-        self.W = torch.sum(model.NICE.scaling_diag)
+        self.W = torch.sum(model.scaling_diag)
 
     def __call__(self, model, output):
         """

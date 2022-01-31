@@ -3,6 +3,10 @@ import torch.nn as nn
 import torch.nn.init as init
 import numpy as np
 
+from params.constants import INPUT_DIM, HIDDEN_DIM, NUM_LAYERS
+
+################################################################################
+
 
 def _get_even(xs): return xs[:, 0::2]
 def _get_odd(xs): return xs[:, 1::2]
@@ -210,3 +214,33 @@ class NICE(nn.Module):
             xs = self.layer2.inverse(xs)
             xs = self.layer1.inverse(xs)
         return xs
+
+################################################################################
+
+
+class NICEWrapper:
+
+    def __init__(self):
+        self.model = NICE(INPUT_DIM, HIDDEN_DIM, NUM_LAYERS)
+
+    def _get_nb_parameters(self):
+
+        nb_params = 0
+        for param in self.model.parameters():
+            nb_params += param.numel()
+
+        return nb_params
+
+    def save(self, path, epoch):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        torch.save({'epoch': epoch,
+                    'state_dict': self.model.state_dict()},
+                   os.path.join(path, f'checkpoint_{epoch}.pth'))
+
+    def get_info(self):
+
+        infos = str(self.model)
+        infos += f'\nNumber of parameters: {self._get_nb_parameters()}'
+
+        return infos
