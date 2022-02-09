@@ -31,6 +31,24 @@ We can do this supervised training step only with the labeled part of our datase
 
 Now that we have access to a mapping of any image, we can train our outlier detection stage. Note that this stage has to be done independently from the previous stage, as one of the main requirements of FlowSVDD training is a model with constant jacobian for every entry possible, which would not be the case if we just trained a singular model combining our ENet stage with our flow model stage. The main ressource for flow SVDD is the following article : https://arxiv.org/pdf/2108.04907.pdf
 
-The main idea in flow SVDD is to train a model to map our feature space to another, same dimensional space of latent features, such as out data is a tightly packed as possible. Jacobian being constant, the mapping keeps volumes unchanged, with a multiplicative constant. This forces the algorithm to actually learn something instead of producing trivial solutions (like mapping everything to the same point, which would indeed minimize the area of the sphere enclosing the data in our latent space). The following loss is used :
+The main idea in flow SVDD is to train a model to map our feature space to another, same dimensional space of latent features, such as out data is a tightly packed as possible. Jacobian being constant, the mapping keeps volumes unchanged, with a multiplicative constant. This forces the algorithm to actually learn something instead of producing trivial solutions (like mapping everything to the same point, which would indeed minimize the area of the sphere enclosing the data in our latent space).
+
+This approach relies on the supposition that the feature mapping that we got out of the first step of our training will be able to be trained is such a way that CG images are actual outliers.
+
+The following loss is used :
 
 ![\Large F(R,c,f)=R^2+frac{1}{\nu n}\sum_i max(0,\lVert f(x_i)-c\rVert^2-R^2)](<https://latex.codecogs.com/svg.latex?\Large&space;F%28R,c,f%29=R^2+\frac{1}{\nu%20n}\sum_i%20max%280,\lVert%20f%28x_i%29-c\rVert^2-R^2%29>)
+
+The parameters c and R are learned through the training process, and f is our trained function. <span>&#957;</span> the hyperparamater controlling how much of the training data should be considered as outliers. This is usually set between 0.1 and 0.01 for our purposes here.
+
+An important fact to note here is that we will only train this step using natural images. As we are trying to teach our model to map images such as natural images are tightly packed together, we don't need to use CG images, and we can set <span>&#957;</span> to be quite low (as none of our images are actually outliers). This approach is also relevant here as our dataset is imbalanced towards natural images (we train on a balanced dataset, but we have a lot more natural images to choose from than CG images). This allows us to leverage these readily available images without any efforts.
+
+As for R and c, they are handled differently :
+- c is initialized before the first epoch. As the value of c doesn't matter (it being the center of the ball, changing c would be equivalent to translating our latent space, which doesn't change anything) it's taken as the average of all features over the latent space, when passing though the randomly initialized flow model.
+- R has to be updated, but only so often. This training method only updates it every two epochs. The update is made to put R as the value of the distance between c and the value of the dataset that lies at the position (1 - <span>&#957;</span>) * total number of images, when all distances are ordered in ascending order. This makes R the radius that includes exactly 1 - <span>&#957;</span> %  of the training images in our latent space, at the time of the update.
+
+The full updating process and loss calculations for our flow model can be found in loss.py.
+
+## Training and results
+
+In order to have comparable data to the reference article, the training is conducted using the same hyperparamaters (for the image mapping process). The idea is to train multiple mapping models, each using a dataset made up of natural images and of CG images from one rendering algorithm, then to train a flow model off of each of these mappings, to be able to see if the addition of the flow model improves the performances compared to the case of a more traditional classification using a fully-connected layer and a fully labeled dataset.
