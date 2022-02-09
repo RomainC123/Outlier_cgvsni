@@ -45,10 +45,12 @@ An important fact to note here is that we will only train this step using natura
 
 As for R and c, they are handled differently :
 - c is initialized before the first epoch. As the value of c doesn't matter (it being the center of the ball, changing c would be equivalent to translating our latent space, which doesn't change anything) it's taken as the average of all features over the latent space, when passing though the randomly initialized flow model.
-- R has to be updated, but only so often. This training method only updates it every two epochs. The update is made to put R as the value of the distance between c and the value of the dataset that lies at the position (1 - <span>&#957;</span>) * total number of images, when all distances are ordered in ascending order. This makes R the radius that includes exactly 1 - <span>&#957;</span> %  of the training images in our latent space, at the time of the update.
+- R has to be updated, but only so often. This training method only updates it every two epochs. The update is made to put R as the value of the distance between c and the value of the dataset that lies at the position (1 - <span>&#957;</span>) * total number of images, when all distances are ordered in ascending order. This makes R the radius of the ball that includes exactly 1 - <span>&#957;</span> %  of the training images in our latent space, at the time of the update.
 
 The full updating process and loss calculations for our flow model can be found in loss.py.
 
-## Training and results
+## Training
 
 In order to have comparable data to the reference article, the training is conducted using the same hyperparamaters (for the image mapping process). The idea is to train multiple mapping models, each using a dataset made up of natural images and of CG images from one rendering algorithm, then to train a flow model off of each of these mappings, to be able to see if the addition of the flow model improves the performances compared to the case of a more traditional classification using a fully-connected layer and a fully labeled dataset.
+
+## Results
