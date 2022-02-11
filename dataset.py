@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 
 from sklearn.model_selection import train_test_split
 
-from params.constants import NB_IMGS_TRAIN_NI, NB_IMGS_TRAIN_CG, NB_IMGS_TEST_PERCLASS, NB_CLASSES, BATCH_SIZE, ID_CG_TRAIN
+from params.constants import *
 from params.paths import DATASET_PATH
 from params.transforms import TRANSFORMS_TRAIN
 
@@ -128,3 +128,22 @@ class TestDataWrapper:
             df_class = df_data.loc[df_data['Label'] == class_id].sample(NB_IMGS_TEST_PERCLASS).reset_index(drop=True)
             dataset_class = ImgDataset(df_class, self.normalize)
             self.list_dataloaders_test.append(DataLoader(dataset_class, batch_size=BATCH_SIZE, shuffle=True))
+
+
+class TestImgMapDataWrapper:
+
+    def __init__(self, train_ni_idx, train_cg_idx, normalize):
+
+        self.normalize = normalize
+
+        # Importing data, removing samples already used for training, and then sampling from each class
+        df_data = pd.read_csv(os.path.join(DATASET_PATH, 'dataset.csv'))
+        df_data = df_data.drop(train_ni_idx)
+        df_data = df_data.drop(train_cg_idx)
+
+        list_df_class = []
+        for class_id in [0, ID_CG_TRAIN]:
+            list_df_class.append(df_data.loc[df_data['Label'] == class_id].sample(NB_IMGS_TEST_PERCLASS).reset_index(drop=True))
+
+        self.df_test = pd.concat(list_df_class, axis=0).reset_index(drop=True)
+        self.dataloader_test = DataLoader(ImgDataset(self.df_test, self.normalize), batch_size=BATCH_SIZE, shuffle=True)

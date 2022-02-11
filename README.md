@@ -51,6 +51,17 @@ The full updating process and loss calculations for our flow model can be found 
 
 ## Training
 
+The dataset is quite massive, and cannot be uploaded to github. To fetch it in order to run the code, please go to https://drive.google.com/file/d/18-jdgU7OHj56bua4wMQ6yboMzWa_qXyz/view?usp=sharing. The archive should be decompressed into the dataset folder, so that the folder looks like
+
+dataset    
+├── Artlantis  
+├── Autodesk  
+├── Corona  
+├── RAISE  
+├── VISION  
+├── VRay  
+└── dataset.csv
+
 In order to have comparable data to the reference article, the training is conducted using the same hyperparamaters (for the image mapping process). The idea is to train multiple mapping models, each using a dataset made up of natural images and of CG images from one rendering algorithm, then to train a flow model off of each of these mappings, to be able to see if the addition of the flow model improves the performances compared to the case of a more traditional classification using a fully-connected layer and a fully labeled dataset.
 
 ## Results

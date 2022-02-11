@@ -135,6 +135,7 @@ dataset/Corona
 dataset/RAISE
 dataset/VISION
 dataset/VRay
+dataset.zip
 
 # Checkpoints
 *.pth
