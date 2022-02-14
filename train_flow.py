@@ -6,7 +6,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 from datetime import datetime
-from torch.optim import SGD
+from torch.optim import Adam
 from tqdm import tqdm
 
 from dataset import TrainDataWrapper
@@ -16,6 +16,15 @@ from loss import FSVDDLoss
 from params.constants import *
 from params.paths import RESULTS_PATH
 
+import warnings
+warnings.filterwarnings('ignore')
+
+cuda_state = torch.cuda.is_available()
+
+seed = SEED
+np.random.seed(seed)  # Fixes the dataset, but not the training behavior
+
+################################################################################
 
 parser = argparse.ArgumentParser(description='Testing')
 
@@ -57,7 +66,7 @@ flow_wrapper.model.train()
 for epoch in range(1, EPOCHS_FLOW + 1):  # First epoch id is 1, not 0
 
     lr = LR_FLOW * (0.1 ** (epoch // TRAIN_STEP_FLOW))
-    for param_group in optim_img_map.param_groups:
+    for param_group in optim_flow.param_groups:
         param_group['lr'] = lr
 
     loss_epoch = 0.
