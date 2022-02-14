@@ -91,6 +91,14 @@ for epoch in range(EPOCHS_IMG_MAP):  # First epoch id is 1, not 0
 
     losses_img_map.append(loss_epoch / len(data_train.dataloader_train_img_map))
 
+    torch.save({'epoch': epoch,
+                'state_dict': img_map_wrapper.model.state_dict()},
+               os.path.join(results_path, f'img_map_checkpoint_{epoch}.pth'))
+    try:
+        os.remove(os.path.join(results_path, f'img_map_checkpoint_{epoch - CHECKPOINT}.pth'))
+    except:
+        pass
+
 ################################################################################
 
 if not os.path.exists(results_path):

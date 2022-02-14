@@ -63,6 +63,9 @@ losses_flow = []
 print('Starting flow training...')
 flow_wrapper.model.train()
 
+if not os.path.exists(results_path):
+    os.makedirs(results_path)
+
 for epoch in range(1, EPOCHS_FLOW + 1):  # First epoch id is 1, not 0
 
     lr = LR_FLOW * (0.1 ** (epoch // TRAIN_STEP_FLOW))
@@ -117,14 +120,15 @@ for epoch in range(1, EPOCHS_FLOW + 1):  # First epoch id is 1, not 0
 
     losses_flow.append(loss_epoch / len(data_train.dataloader_train_flow))
 
+    torch.save({'epoch': epoch,
+                'state_dict': flow_wrapper.model.state_dict()},
+               os.path.join(results_path, f'flow_checkpoint_{epoch}.pth'))
+    try:
+        os.remove(os.path.join(results_path, f'flow_checkpoint_{epoch - CHECKPOINT}.pth'))
+    except:
+        pass
+
 ################################################################################
-
-if not os.path.exists(results_path):
-    os.makedirs(results_path)
-
-torch.save({'epoch': epoch,
-            'state_dict': img_map_wrapper.model.state_dict()},
-           os.path.join(results_path, f'img_map_checkpoint_{EPOCHS_IMG_MAP}.pth'))
 
 torch.save({'epoch': epoch,
             'state_dict': flow_wrapper.model.state_dict()},
@@ -135,7 +139,7 @@ with open(os.path.join(results_path, 'vars.pkl'), 'wb') as f:
                  "fsvdd_loss": fsvdd_loss}, f)
 
 plt.figure(figsize=(14, 12))
-plt.plot(range(EPOCHS_IMG_MAP), losses_flow, label='Training loss flow')
+plt.plot(range(EPOCHS_FLOW), losses_flow, label='Training loss flow')
 plt.legend()
 
 plt.savefig(os.path.join(results_path, 'loss_training_flow.png'))

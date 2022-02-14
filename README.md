@@ -66,8 +66,6 @@ In order to have comparable data to the reference article, the training is condu
 
 To run the training process, be sure to unpack everything in the right folders, and install all required dependancies (pip install -r requirements.txt). Then run train_img_map.py, which will create a model in the trained model folders. When that is done, run train_flow.py (you will need to provide the name of the model you just trained through the --model_name argument in your command, the model name being the datetime of the moment you started the first training step). Be aware that these models are pretty massive and take a very long time to train (~4h for img map training with 1260 images on an RTX 2070).
 
-Also, beware of the fact that there are no checkpoints yet, so the entire model won't be save until the training is done.
-
 ## Results
 
 These will be updated as I get time to train different models, the time constraint here being a major player (roughly 20h of training on my computer to train an actual comparable img_map model in reference to the state-of-the-art).
