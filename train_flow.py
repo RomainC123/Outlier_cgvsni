@@ -1,3 +1,40 @@
+import os
+import argparse
+import numpy as np
+import torch
+import pickle
+import matplotlib.pyplot as plt
+
+from datetime import datetime
+from torch.optim import SGD
+from tqdm import tqdm
+
+from dataset import TrainDataWrapper
+from ENet import ENetWrapper
+from NICE import NICEWrapper
+from loss import FSVDDLoss
+from params.constants import *
+from params.paths import RESULTS_PATH
+
+
+parser = argparse.ArgumentParser(description='Testing')
+
+parser.add_argument('--model_name', dest='model_name',)
+args = parser.parse_args()
+assert(args.model_name != None)
+
+results_path = os.path.join(RESULTS_PATH, args.model_name)
+
+with open(os.path.join(results_path, 'vars.pkl'), 'rb') as f:
+    data_train = pickle.load(f)['data_train']
+
+img_map_wrapper = ENetWrapper()
+if cuda_state:
+    img_map_wrapper.model.cuda()
+
+checkpoint = torch.load(os.path.join(results_path, f'img_map_checkpoint_{EPOCHS_IMG_MAP}.pth'))
+img_map_wrapper.model.load_state_dict(checkpoint['state_dict'])
+
 ################################################################################
 
 flow_wrapper = NICEWrapper()
@@ -18,6 +55,10 @@ print('Starting flow training...')
 flow_wrapper.model.train()
 
 for epoch in range(1, EPOCHS_FLOW + 1):  # First epoch id is 1, not 0
+
+    lr = LR_FLOW * (0.1 ** (epoch // TRAIN_STEP_FLOW))
+    for param_group in optim_img_map.param_groups:
+        param_group['lr'] = lr
 
     loss_epoch = 0.
     outputs = torch.zeros((NB_IMGS_TRAIN_NI, INPUT_DIM))
@@ -81,21 +122,11 @@ torch.save({'epoch': epoch,
            os.path.join(results_path, f'flow_checkpoint_{EPOCHS_FLOW}.pth'))
 
 with open(os.path.join(results_path, 'vars.pkl'), 'wb') as f:
-    pickle.dump({"train_ni_idx": data_train.train_ni_idx,
-                 "train_cg_idx": data_train.train_cg_idx,
-                 "normalize_img_map": data_train.normalize_img_map,
-                 "normalize_flow": data_train.normalize_flow,
-                 "C": fsvdd_loss.C,
-                 "R": fsvdd_loss.R,
-                 "W": fsvdd_loss.W}, f)
+    pickle.dump({"data_train": data_train,
+                 "fsvdd_loss": fsvdd_loss}, f)
 
 plt.figure(figsize=(14, 12))
-ax1 = plt.subplot(121)
-ax1.plot(range(EPOCHS_IMG_MAP), losses_img_map, label='Training loss img_map')
-ax1.legend()
+plt.plot(range(EPOCHS_IMG_MAP), losses_flow, label='Training loss flow')
+plt.legend()
 
-ax2 = plt.subplot(122)
-ax2.plot(range(EPOCHS_FLOW), losses_flow, label='Training loss flow')
-ax2.legend()
-
-plt.savefig(os.path.join(results_path, 'loss_training.png'))
+plt.savefig(os.path.join(results_path, 'loss_training_flow.png'))
